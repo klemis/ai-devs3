@@ -12,7 +12,7 @@ import (
 func main() {
 	apiKey := os.Getenv("AI_DEVS_API_KEY")
 	if apiKey == "" {
-		log.Fatal("TWOJ_KLUCZ environment variable not set")
+		log.Fatal("AI_DEVS_API_KEY environment variable not set")
 	}
 
 	fetcher := &service.HTTPPageFetcher{}
