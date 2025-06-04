@@ -9,7 +9,7 @@ import (
 // Run executes the login workflow
 func (app *App) Run(loginURL string, creds domain.Credentials) (string, error) {
 	// Step 1: Fetch the login page
-	htmlContent, err := app.pageFetcher.FetchPage(loginURL)
+	htmlContent, err := app.httpClient.FetchPage(loginURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch login page: %w", err)
 	}
@@ -29,7 +29,7 @@ func (app *App) Run(loginURL string, creds domain.Credentials) (string, error) {
 	fmt.Printf("LLM provided answer: %s\n", answer.Text)
 
 	// Step 4: Submit login form
-	loginResponse, err := app.httpService.Login(creds, answer)
+	loginResponse, err := app.roboISOService.Login(creds, answer)
 	if err != nil {
 		return "", fmt.Errorf("login failed: %w", err)
 	}

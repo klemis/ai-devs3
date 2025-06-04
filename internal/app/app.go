@@ -4,23 +4,23 @@ import "ai-devs3/internal/service"
 
 // App orchestrates the login workflow
 type App struct {
-	pageFetcher       service.PageFetcher
+	httpClient        service.HTTPClient
 	questionExtractor service.QuestionExtractor
 	llmClient         service.LLMClient
-	httpService       service.HTTPClient
+	roboISOService    service.RoboISO
 }
 
 // NewApp creates a new App with the given dependencies
 func NewApp(
-	pageFetcher service.PageFetcher,
+	httpClient service.HTTPClient,
 	questionExtractor service.QuestionExtractor,
 	llmClient service.LLMClient,
-	httpService service.HTTPClient,
+	roboISOService service.RoboISO,
 ) *App {
 	return &App{
-		pageFetcher:       pageFetcher,
+		httpClient:        httpClient,
 		questionExtractor: questionExtractor,
 		llmClient:         llmClient,
-		httpService:       httpService,
+		roboISOService:    roboISOService,
 	}
 }

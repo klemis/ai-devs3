@@ -1,12 +1,8 @@
 package app
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"regexp"
 	"strconv"
 )
@@ -14,15 +10,27 @@ import (
 func (app *App) RunS01E03(apiKey string) (string, error) {
 	url := fmt.Sprintf("https://c3ntrala.ag3nts.org/data/%s/json.txt", apiKey)
 
-	data, err := app.pageFetcher.FetchJSONData(url)
+	data, err := app.httpClient.FetchJSONData(url)
 	if err != nil {
 		log.Fatalf("Failed to fetch JSON: %v", err)
 	}
 
 	corrected := app.processTestData(data)
-	response := buildResponse(apiKey, corrected)
 
-	return postReport(response), nil
+	answer := map[string]interface{}{
+		"apikey":    apiKey,
+		"test-data": corrected["test-data"],
+	}
+
+	response := buildResponse(apiKey, answer)
+
+	res, err := app.httpClient.PostReport(response)
+	if err != nil {
+		log.Fatalf("Failed to post report: %v", err)
+		return "", err
+	}
+
+	return res, nil
 }
 
 // processTestData corrects math answers and fills LLM answers for test questions
@@ -106,34 +114,12 @@ func updateTestAnswers(arr []interface{}, llmIndexes []int, answers []string) []
 }
 
 // buildResponse creates the final response object
-func buildResponse(apiKey string, corrected map[string]interface{}) map[string]interface{} {
+func buildResponse(apiKey string, answer map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"task":   "JSON",
 		"apikey": apiKey,
-		"answer": map[string]interface{}{
-			"apikey":    apiKey,
-			"test-data": corrected["test-data"],
-		},
+		"answer": answer,
 	}
-}
-
-// postReport sends the response to the report endpoint
-func postReport(response map[string]interface{}) string {
-	buf := new(bytes.Buffer)
-	err := json.NewEncoder(buf).Encode(response)
-	if err != nil {
-		log.Fatalf("Failed to encode response: %v", err)
-	}
-
-	postResp, err := http.Post("https://c3ntrala.ag3nts.org/report", "application/json", buf)
-	if err != nil {
-		log.Fatalf("Failed to POST report: %v", err)
-	}
-	defer postResp.Body.Close()
-
-	postBody, _ := io.ReadAll(postResp.Body)
-
-	return string(postBody)
 }
 
 // isMath checks if the question is a simple math operation

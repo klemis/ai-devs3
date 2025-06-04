@@ -14,7 +14,7 @@ func (app *App) RunS01E02() (string, error) {
 		Text:  "READY",
 	}
 	// Init conversation with API
-	question, err := app.httpService.Verify(initRequestBody)
+	question, err := app.roboISOService.Verify(initRequestBody)
 	if err != nil {
 		log.Fatalf("Error: %v\n", err)
 	}
@@ -27,7 +27,7 @@ func (app *App) RunS01E02() (string, error) {
 
 	fmt.Printf("answer: %+v\n", answer)
 
-	response, err := app.httpService.Verify(answer)
+	response, err := app.roboISOService.Verify(answer)
 	if err != nil {
 		log.Fatalf("Error: %v\n", err)
 	}

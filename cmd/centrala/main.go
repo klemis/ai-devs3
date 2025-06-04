@@ -10,7 +10,7 @@ import (
 func main() {
 	cetralaURL := "https://c3ntrala.ag3nts.org/"
 
-	pageFetcher := &service.HTTPPageFetcher{}
+	pageFetcher := &service.HTTPClientImpl{}
 	page, err := pageFetcher.FetchPage(cetralaURL)
 	if err != nil {
 		log.Fatalf("Error: %v\n", err)

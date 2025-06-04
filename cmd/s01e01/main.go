@@ -18,10 +18,10 @@ func main() {
 	}
 
 	// Create dependencies
-	pageFetcher := &service.HTTPPageFetcher{}
+	pageFetcher := &service.HTTPClientImpl{}
 	questionExtractor := &service.RegexQuestionExtractor{}
 	llmClient := &service.OpenAIClient{}
-	httpService := &service.HTTPService{URL: loginURL}
+	httpService := &service.RoboISOService{URL: loginURL}
 
 	// Create and run the application
 	robotApp := app.NewApp(pageFetcher, questionExtractor, llmClient, httpService)

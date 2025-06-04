@@ -12,17 +12,17 @@ import (
 	"ai-devs3/internal/domain"
 )
 
-type HTTPClient interface {
+type RoboISO interface {
 	Login(creds domain.Credentials, answer domain.Answer) (string, error)
 	Verify(requestBody domain.AnswerRoboISO) (string, error)
 }
 
-// HTTPService implements HTTPClient
-type HTTPService struct {
+// RoboISOService implements RoboISOClient
+type RoboISOService struct {
 	URL string
 }
 
-func (s *HTTPService) Login(creds domain.Credentials, answer domain.Answer) (string, error) {
+func (s *RoboISOService) Login(creds domain.Credentials, answer domain.Answer) (string, error) {
 	// Create form data
 	data := url.Values{}
 	data.Set("username", creds.Username)
@@ -52,7 +52,7 @@ func (s *HTTPService) Login(creds domain.Credentials, answer domain.Answer) (str
 	return string(body), nil
 }
 
-func (s *HTTPService) Verify(requestBody domain.AnswerRoboISO) (string, error) {
+func (s *RoboISOService) Verify(requestBody domain.AnswerRoboISO) (string, error) {
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal request body: %w", err)

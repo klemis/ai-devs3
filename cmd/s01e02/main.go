@@ -13,10 +13,10 @@ func main() {
 	url := "https://xyz.ag3nts.org/verify"
 
 	// Create dependencies
-	httpService := &service.HTTPService{URL: url}
+	roboISOService := &service.RoboISOService{URL: url}
 	llmClient := &service.OpenAIClient{}
 
-	app := app.NewApp(nil, nil, llmClient, httpService)
+	app := app.NewApp(nil, nil, llmClient, roboISOService)
 
 	answer, err := app.RunS01E02()
 	if err != nil {
