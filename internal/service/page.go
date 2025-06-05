@@ -16,11 +16,14 @@ type HTTPClient interface {
 	FetchData(url string) (string, error)
 
 	// Posting methods
+	BuildResponse(task string, answer interface{}) map[string]interface{}
 	PostReport(response map[string]interface{}) (string, error)
 }
 
 // HTTPClientImpl implements HTTPClient using standard HTTP
-type HTTPClientImpl struct{}
+type HTTPClientImpl struct {
+	APIKey string
+}
 
 // FetchPage retrieves the content of a web page
 func (h *HTTPClientImpl) FetchPage(url string) (string, error) {
@@ -111,4 +114,13 @@ func (h *HTTPClientImpl) PostReport(response map[string]interface{}) (string, er
 	}
 
 	return string(body), nil
+}
+
+// buildResponse creates the final response object
+func (h *HTTPClientImpl) BuildResponse(task string, answer interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"task":   task,
+		"apikey": h.APIKey,
+		"answer": answer,
+	}
 }

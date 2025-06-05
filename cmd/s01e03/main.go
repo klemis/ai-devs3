@@ -15,7 +15,9 @@ func main() {
 		log.Fatal("AI_DEVS_API_KEY environment variable not set")
 	}
 
-	fetcher := &service.HTTPClientImpl{}
+	fetcher := &service.HTTPClientImpl{
+		APIKey: apiKey,
+	}
 	llmClient := &service.OpenAIClient{}
 
 	app := app.NewApp(fetcher, nil, llmClient, nil)

@@ -22,7 +22,7 @@ func (app *App) RunS01E03(apiKey string) (string, error) {
 		"test-data": corrected["test-data"],
 	}
 
-	response := buildResponse(apiKey, answer)
+	response := app.httpClient.BuildResponse("JSON", answer)
 
 	res, err := app.httpClient.PostReport(response)
 	if err != nil {
@@ -111,15 +111,6 @@ func updateTestAnswers(arr []interface{}, llmIndexes []int, answers []string) []
 	}
 
 	return arr
-}
-
-// buildResponse creates the final response object
-func buildResponse(apiKey string, answer map[string]interface{}) map[string]interface{} {
-	return map[string]interface{}{
-		"task":   "JSON",
-		"apikey": apiKey,
-		"answer": answer,
-	}
 }
 
 // isMath checks if the question is a simple math operation
