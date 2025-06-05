@@ -24,7 +24,7 @@ func main() {
 	httpService := &service.RoboISOService{URL: loginURL}
 
 	// Create and run the application
-	robotApp := app.NewApp(pageFetcher, questionExtractor, llmClient, httpService)
+	robotApp := app.NewApp(pageFetcher, questionExtractor, llmClient, httpService, nil)
 	secretContent, err := robotApp.Run(loginURL, creds)
 	if err != nil {
 		log.Fatalf("Error: %v\n", err)

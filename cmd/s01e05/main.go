@@ -15,14 +15,14 @@ func main() {
 		log.Fatal("AI_DEVS_API_KEY environment variable not set")
 	}
 
-	fetcher := &service.HTTPClientImpl{
+	client := &service.HTTPClientImpl{
 		APIKey: apiKey,
 	}
-	llmClient := &service.OpenAIClient{}
+	ollamaClient := service.NewOllamaClient()
 
-	app := app.NewApp(fetcher, nil, llmClient, nil, nil)
+	app := app.NewApp(client, nil, nil, nil, ollamaClient)
 
-	answer, err := app.RunS01E03(apiKey)
+	answer, err := app.RunS01E05(apiKey)
 	if err != nil {
 		log.Fatalf("Error: %v\n", err)
 	}

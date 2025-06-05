@@ -16,7 +16,7 @@ func main() {
 	roboISOService := &service.RoboISOService{URL: url}
 	llmClient := &service.OpenAIClient{}
 
-	app := app.NewApp(nil, nil, llmClient, roboISOService)
+	app := app.NewApp(nil, nil, llmClient, roboISOService, nil)
 
 	answer, err := app.RunS01E02()
 	if err != nil {

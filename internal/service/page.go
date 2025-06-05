@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 )
 
 // HTTPClient defines the interface for HTTP operations
@@ -76,6 +77,9 @@ func (h *HTTPClientImpl) FetchData(url string) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	respDump, _ := httputil.DumpResponse(resp, true)
+	fmt.Printf("=== RESPONSE ===\n%s\n", respDump)
+
 	// Check for HTTP errors
 	if resp.StatusCode >= 400 {
 		return "", fmt.Errorf("HTTP error: %d %s", resp.StatusCode, resp.Status)
@@ -102,6 +106,9 @@ func (h *HTTPClientImpl) PostReport(response map[string]interface{}) (string, er
 		return "", fmt.Errorf("failed to post report: %w", err)
 	}
 	defer resp.Body.Close()
+
+	respDump, _ := httputil.DumpResponse(resp, true)
+	fmt.Printf("=== RESPONSE ===\n%s\n", respDump)
 
 	// Check for HTTP errors
 	if resp.StatusCode >= 400 {

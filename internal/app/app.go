@@ -8,6 +8,7 @@ type App struct {
 	questionExtractor service.QuestionExtractor
 	llmClient         service.LLMClient
 	roboISOService    service.RoboISO
+	ollamaClient      *service.OllamaClient
 }
 
 // NewApp creates a new App with the given dependencies
@@ -16,11 +17,13 @@ func NewApp(
 	questionExtractor service.QuestionExtractor,
 	llmClient service.LLMClient,
 	roboISOService service.RoboISO,
+	ollamaClient *service.OllamaClient,
 ) *App {
 	return &App{
 		httpClient:        httpClient,
 		questionExtractor: questionExtractor,
 		llmClient:         llmClient,
 		roboISOService:    roboISOService,
+		ollamaClient:      ollamaClient,
 	}
 }
