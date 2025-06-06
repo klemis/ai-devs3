@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -18,6 +19,8 @@ type LLMClient interface {
 	FindFlag(page string) (domain.Answer, error)
 	GetAnswerRoboISO(question string) (domain.AnswerRoboISO, error)
 	GetMultipleAnswers(questions []string) ([]string, error)
+	TranscribeAudio(audioData *os.File, filename string) (string, error)
+	AnalyzeTranscripts(transcripts string) (domain.StreetAnalysis, error)
 }
 
 // OpenAIClient implements LLMClient using OpenAI's API
@@ -106,7 +109,7 @@ func (c *OpenAIClient) GetAnswerRoboISO(question string) (domain.AnswerRoboISO, 
 				{
 					"msgID": 0123456789,
 				    "text": "response"
-				    
+
 				}
 
 				The "text" parameter contains all commands, questions and general communication between entities and your robot system. The "text" value must always be in English and must be a string type.
@@ -172,4 +175,79 @@ func (c *OpenAIClient) GetMultipleAnswers(questions []string) ([]string, error) 
 		}
 	}
 	return answers, nil
+}
+
+// TranscribeAudio uses OpenAI Whisper to transcribe audio data
+func (c *OpenAIClient) TranscribeAudio(audioData *os.File, filename string) (string, error) {
+	client := openai.NewClient()
+
+	transcription, err := client.Audio.Transcriptions.New(context.TODO(), openai.AudioTranscriptionNewParams{
+		File:  audioData,
+		Model: openai.AudioModelWhisper1,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to transcribe audio: %w", err)
+	}
+
+	return transcription.Text, nil
+}
+
+// AnalyzeTranscripts analyzes interview transcripts to find the street where Professor Andrzej Maj's institute is located
+func (c *OpenAIClient) AnalyzeTranscripts(transcripts string) (domain.StreetAnalysis, error) {
+	client := openai.NewClient()
+
+	systemPrompt := fmt.Sprintf(`
+	<prompt_objective>
+    You are an expert investigator analyzing witness interview transcripts based on the provided context containing transcripts.
+    Your task is to determine the street where the specific institute where Professor Andrzej Maj works is located.
+    IMPORTANT: Find the street where the INSTITUTE is located, not the main university headquarters.
+    </prompt_objective>
+
+    <context>%s</context>
+
+    <prompt_rules>
+    Analyze the interview transcripts step by step.
+    Look for any mentions of Professor Andrzej Maj.
+    Identify what institute or department he works at.
+    Look for any location information about this specific institute.
+    Use your knowledge of Polish universities and their institutes to determine the street name.
+    Focus on finding the street name where his specific institute is located.
+    Provide your analysis step by step using the &lt;_thinking&gt; tag.
+    Provide ONLY the street name as your final answer.
+
+    Format your response as JSON in the following structure:
+    {
+      "_thinking": "... some reasoning",
+      "answer": "Pasteura"
+    }
+  	</prompt_rules>
+
+  	<example_response>
+  	  {
+  	    "_thinking": "Professor Andrzej Maj is mentioned as going to the Institute of Physics. The transcript says the building is near Pasteura Street. The Institute of Physics at this university is indeed located on Pasteura Street.",
+  	    "answer": "Pasteura"
+  	  }
+  	</example_response>`, transcripts)
+
+	fmt.Println("======PROMPT=======")
+	fmt.Println(systemPrompt)
+
+	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.SystemMessage(systemPrompt),
+			openai.UserMessage("What is the name of the street where the University Institute is located where Professor Andrzej Maj lectures?"),
+		},
+		Model: openai.ChatModelGPT4o,
+	})
+	if err != nil {
+		return domain.StreetAnalysis{}, fmt.Errorf("failed to analyze transcripts: %w", err)
+	}
+
+	answer := domain.StreetAnalysis{}
+	err = json.Unmarshal([]byte(chatCompletion.Choices[0].Message.Content), &answer)
+	if err != nil {
+		return domain.StreetAnalysis{}, fmt.Errorf("failed to unmarshal OpenAI API response: %w", err)
+	}
+
+	return answer, nil
 }
