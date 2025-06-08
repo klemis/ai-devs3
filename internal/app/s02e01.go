@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 )
 
-// RunS01E06 handles the audio transcription and analysis task
-func (app *App) RunS01E06(apiKey string) (string, error) {
+// RunS02E01 handles the audio transcription and analysis task
+func (app *App) RunS02E01(apiKey string) (string, error) {
 	// Step 1: List audio files in the directory
 	path, err := filepath.Abs("../lessons-md/przesluchania")
 	if err != nil {

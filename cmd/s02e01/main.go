@@ -22,7 +22,7 @@ func main() {
 
 	app := app.NewApp(client, nil, llmClient, nil, nil)
 
-	answer, err := app.RunS01E06(apiKey)
+	answer, err := app.RunS02E01(apiKey)
 	if err != nil {
 		log.Fatalf("Error: %v\n", err)
 	}
