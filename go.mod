@@ -2,7 +2,7 @@ module ai-devs3
 
 go 1.24.3
 
-require github.com/openai/openai-go v0.1.0-beta.10
+require github.com/openai/openai-go v1.3.0
 
 require (
 	github.com/tidwall/gjson v1.14.4 // indirect

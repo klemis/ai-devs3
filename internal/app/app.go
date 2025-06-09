@@ -9,6 +9,7 @@ type App struct {
 	llmClient         service.LLMClient
 	roboISOService    service.RoboISO
 	ollamaClient      *service.OllamaClient
+	imageProcessor    *service.ImageProcessor
 }
 
 // NewApp creates a new App with the given dependencies
@@ -25,5 +26,6 @@ func NewApp(
 		llmClient:         llmClient,
 		roboISOService:    roboISOService,
 		ollamaClient:      ollamaClient,
+		imageProcessor:    service.NewImageProcessor(),
 	}
 }
