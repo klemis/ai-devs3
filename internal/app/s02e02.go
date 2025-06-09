@@ -9,7 +9,7 @@ import (
 )
 
 // RunS02E02 handles the map fragment analysis task
-func (app *App) RunS02E02(apiKey string) (string, error) {
+func (app *App) RunS02E02() (string, error) {
 	// imageURL := "https://assets-v2.circle.so/4s5ldjdx0ta03r9aey61z0k4uw1c"
 
 	// log.Printf("Fetching map image from: %s", imageURL)
