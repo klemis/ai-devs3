@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -20,8 +21,9 @@ type LLMClient interface {
 	GetAnswerRoboISO(question string) (domain.AnswerRoboISO, error)
 	GetMultipleAnswers(questions []string) ([]string, error)
 	TranscribeAudio(audioData *os.File, filename string) (string, error)
-	AnalyzeTranscripts(transcripts string) (domain.StreetAnalysis, error)
+	AnalyzeTranscripts(transcripts string) (domain.AnswerWithAnalysis, error)
 	AnalyzeMapFragments(imagesBase64 []string) (domain.MapAnalysis, error)
+	ExtractTextFromImage(base64Image []byte) (string, error)
 }
 
 // OpenAIClient implements LLMClient using OpenAI's API
@@ -245,6 +247,52 @@ func (c *OpenAIClient) AnalyzeMapFragments(imagesBase64 []string) (domain.MapAna
 	return analysis, nil
 }
 
+// ExtractTextFromImage performs OCR on an image file and returns extracted text
+// Returns "no text" if the image contains no readable text or is illegible
+func (c *OpenAIClient) ExtractTextFromImage(imageData []byte) (string, error) {
+	client := openai.NewClient()
+
+	base64Image := base64.StdEncoding.EncodeToString(imageData)
+
+	// Create the vision request
+	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.SystemMessage(`You are a precise OCR (Optical Character Recognition) system. Your task is to extract all readable text from images.
+				Instructions:
+				- Extract ALL visible text from the image, including text in different fonts, sizes, and orientations
+				- Maintain the original formatting and structure as much as possible
+				- If there are multiple text sections, separate them clearly
+				- If the text is handwritten, do your best to read it
+				- If the image contains no readable text, is too blurry, or the text is completely illegible, respond with exactly: "no text"
+				- Only return the extracted text content, nothing else`),
+			openai.UserMessage(
+				[]openai.ChatCompletionContentPartUnionParam{
+					openai.ImageContentPart(openai.ChatCompletionContentPartImageImageURLParam{
+						// TODO: Allow different image formats
+						URL: fmt.Sprintf("data:image/png;base64,%s", base64Image),
+					}),
+					openai.TextContentPart("Please extract all readable text from this image. If no text is visible or readable, return 'no text'."),
+				},
+			),
+		},
+		Model:       openai.ChatModelGPT4o,
+		MaxTokens:   openai.Int(2048),
+		Temperature: openai.Float(0.1), // Low temperature for consistent results
+	})
+
+	if err != nil {
+		return "no text", fmt.Errorf("failed to process image with OpenAI Vision: %w", err)
+	}
+
+	// Extract the result
+	result := chatCompletion.Choices[0].Message.Content
+	if result == "" {
+		return "no text", nil
+	}
+
+	return result, nil
+}
+
 // GetMultipleAnswers sends multiple questions to the OpenAI API and returns the answers in order
 func (c *OpenAIClient) GetMultipleAnswers(questions []string) ([]string, error) {
 	if len(questions) == 0 {
@@ -294,7 +342,7 @@ func (c *OpenAIClient) TranscribeAudio(audioData *os.File, filename string) (str
 }
 
 // AnalyzeTranscripts analyzes interview transcripts to find the street where Professor Andrzej Maj's institute is located
-func (c *OpenAIClient) AnalyzeTranscripts(transcripts string) (domain.StreetAnalysis, error) {
+func (c *OpenAIClient) AnalyzeTranscripts(transcripts string) (domain.AnswerWithAnalysis, error) {
 	client := openai.NewClient()
 
 	systemPrompt := fmt.Sprintf(`
@@ -341,13 +389,13 @@ func (c *OpenAIClient) AnalyzeTranscripts(transcripts string) (domain.StreetAnal
 		Model: openai.ChatModelGPT4o,
 	})
 	if err != nil {
-		return domain.StreetAnalysis{}, fmt.Errorf("failed to analyze transcripts: %w", err)
+		return domain.AnswerWithAnalysis{}, fmt.Errorf("failed to analyze transcripts: %w", err)
 	}
 
-	answer := domain.StreetAnalysis{}
+	answer := domain.AnswerWithAnalysis{}
 	err = json.Unmarshal([]byte(chatCompletion.Choices[0].Message.Content), &answer)
 	if err != nil {
-		return domain.StreetAnalysis{}, fmt.Errorf("failed to unmarshal OpenAI API response: %w", err)
+		return domain.AnswerWithAnalysis{}, fmt.Errorf("failed to unmarshal OpenAI API response: %w", err)
 	}
 
 	return answer, nil

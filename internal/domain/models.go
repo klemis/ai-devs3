@@ -23,7 +23,7 @@ type Credentials struct {
 }
 
 // Analysis represents the analysis result from the LLM
-type StreetAnalysis struct {
+type AnswerWithAnalysis struct {
 	Thinking string `json:"_thinking"`
 	Answer   string `json:"answer"`
 }

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
-
-	"ai-devs3/internal/service"
 )
 
 // RunS02E02 handles the map fragment analysis task
@@ -22,11 +20,7 @@ func (app *App) RunS02E02() (string, error) {
 	// }
 
 	// Step 1: Load image parts
-
-	// Step 2: Initialize the image processor
-	imageProcessor := service.NewImageProcessor()
-
-	// Step 3: Process the full image for single analysis
+	// Step 2: Process the full image for single analysis
 	const numImages = 4
 	images := make([]string, numImages)
 	for i := 0; i < numImages; i++ {
@@ -35,7 +29,7 @@ func (app *App) RunS02E02() (string, error) {
 			return "", fmt.Errorf("failed to get absolute path: %w", err)
 		}
 
-		processedImage, err := imageProcessor.ProcessImage(path, 2048)
+		processedImage, err := app.imageProcessor.ProcessImage(path, 2048)
 		if err != nil {
 			return "", fmt.Errorf("failed to process image: %w", err)
 		}
@@ -44,7 +38,7 @@ func (app *App) RunS02E02() (string, error) {
 		log.Printf("Processed image: %dx%d, estimated tokens: %d", processedImage.Width, processedImage.Height, processedImage.TokenCost)
 	}
 
-	// Step 4: Analyze as single image
+	// Step 3: Analyze as single image
 	log.Println("Analyzing map fragments...")
 	analysis, err := app.llmClient.AnalyzeMapFragments(images)
 	if err != nil {
