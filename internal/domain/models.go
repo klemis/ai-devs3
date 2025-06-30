@@ -65,3 +65,10 @@ type ImageProcessingResult struct {
 	Height     int
 	TokenCost  int
 }
+
+// CategorizationResult represents the LLM's categorization response
+type CategorizationResult struct {
+	Thinking      string `json:"_thinking"`
+	Category      string `json:"category"`
+	Justification string `json:"justification"`
+}

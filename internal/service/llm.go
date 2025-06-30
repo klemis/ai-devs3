@@ -26,6 +26,7 @@ type LLMClient interface {
 	ExtractTextFromImage(base64Image []byte) (string, error)
 	ExtractKeywordsForDALLE(description string) (string, error)
 	GenerateImageWithDALLE(prompt string) (string, error)
+	CategorizeContent(content string) (domain.CategorizationResult, error)
 }
 
 // OpenAIClient implements LLMClient using OpenAI's API
@@ -149,6 +150,70 @@ func (c *OpenAIClient) GetAnswerRoboISO(question string) (domain.AnswerRoboISO, 
 	return answer, nil
 }
 
+func (c *OpenAIClient) CategorizeContent(content string) (domain.CategorizationResult, error) {
+	client := openai.NewClient()
+
+	systemPrompt := fmt.Sprintf(`
+	<prompt_objective>
+	You are an expert analyst tasked with categorizing factory security reports and surveillance data.
+	Your task is to determine if the content contains information about:
+	1. People: Information about ACTUAL captured people, confirmed human presence, traces of human activity, or personnel interactions
+	2. Hardware: Hardware (not software) failures, malfunctions, or technical issues with physical equipment
+
+	If the content doesn't clearly fit into either category, respond with "skip".
+	</prompt_objective>
+
+	<prompt_rules>
+	- Analyze the content step by step using the <_thinking> tag
+	- Focus on identifying clear indicators of ACTUAL human presence/activity OR hardware issues
+	- People category ONLY includes: captured individuals, confirmed human traces, personnel activities, biometric scans, successful human detection events
+	- Do NOT categorize as "people" if content only mentions: searching for humans with no results, false alarms, animal presence mistaken for humans, routine patrols with no human contact
+	- Hardware category includes: equipment failures, malfunctions, technical problems with physical devices, broken machinery, sensor failures
+	- Exclude software issues, routine patrols without incidents, unsuccessful searches, or unclear content
+	- Be strict: only categorize as "people" if humans are actually found, captured, or confirmed present
+	- Provide justification for your decision
+	- Respond with ONLY "people", "hardware", or "skip" in the category field
+	</prompt_rules>
+
+	<example_response>
+	{
+		"_thinking": "The content mentions 'Wykryto jednostkę organiczną' (detected organic unit) and 'Przeprowadzono skan biometryczny' (biometric scan performed), which clearly indicates human presence and capture.",
+		"category": "people",
+		"justification": "Content describes actual detection and processing of a human individual with biometric verification."
+	}
+	</example_response>
+
+	<negative_example>
+	{
+		"_thinking": "The content mentions searching for rebels but states 'human presence is not detected' and describes an 'abandoned town' with no actual human contact or capture.",
+		"category": "skip",
+		"justification": "Content describes unsuccessful search with no actual human presence confirmed."
+	}
+	</negative_example>
+
+	Content to analyze:
+	%s`, content)
+
+	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.SystemMessage(systemPrompt),
+			openai.UserMessage("Categorize this content into people, hardware, or skip."),
+		},
+		Model: openai.ChatModelGPT4o,
+	})
+	if err != nil {
+		return domain.CategorizationResult{}, fmt.Errorf("failed to categorize content: %w", err)
+	}
+
+	result := domain.CategorizationResult{}
+	err = json.Unmarshal([]byte(chatCompletion.Choices[0].Message.Content), &result)
+	if err != nil {
+		return domain.CategorizationResult{}, fmt.Errorf("failed to unmarshal categorization response: %w", err)
+	}
+
+	return result, nil
+}
+
 // GenerateImageWithDALLE creates an image using DALL-E 3 and returns the image URL
 func (c *OpenAIClient) GenerateImageWithDALLE(prompt string) (string, error) {
 	client := openai.NewClient()
@@ -179,7 +244,7 @@ func (c *OpenAIClient) GenerateImageWithDALLE(prompt string) (string, error) {
 // ExtractKeywordsForDALLE analyzes robot description and creates optimized prompt for DALL-E 3
 func (c *OpenAIClient) ExtractKeywordsForDALLE(description string) (string, error) {
 	client := openai.NewClient()
-	
+
 	systemPrompt := `You are an expert prompt engineer specializing in DALL-E 3 image generation. Your task is to analyze a robot description and create an optimized prompt for generating a high-quality robot image.
 
 RULES:
