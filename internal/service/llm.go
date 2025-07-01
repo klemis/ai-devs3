@@ -199,7 +199,7 @@ func (c *OpenAIClient) CategorizeContent(content string) (domain.CategorizationR
 			openai.SystemMessage(systemPrompt),
 			openai.UserMessage("Categorize this content into people, hardware, or skip."),
 		},
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT4oMini,
 	})
 	if err != nil {
 		return domain.CategorizationResult{}, fmt.Errorf("failed to categorize content: %w", err)
@@ -273,7 +273,7 @@ Example Output: "A sleek metallic robot with bright red sensor lights, sturdy tr
 			openai.SystemMessage(systemPrompt),
 			openai.UserMessage(userPrompt),
 		},
-		Model:       openai.ChatModelGPT4oMini,
+		Model:       openai.ChatModelGPT4_1Mini,
 		Temperature: openai.Float(0.7), // Allow some creativity for visual descriptions
 		MaxTokens:   openai.Int(200),   // Limit response length for conciseness
 	})
