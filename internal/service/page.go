@@ -15,7 +15,7 @@ type HTTPClient interface {
 	FetchPage(url string) (string, error)
 	FetchJSONData(url string) (map[string]interface{}, error)
 	FetchData(url string) (string, error)
-	FetchImage(url string) ([]byte, error)
+	FetchBinaryData(url string) ([]byte, error)
 
 	// Posting methods
 	BuildResponse(task string, answer interface{}) map[string]interface{}
@@ -94,8 +94,8 @@ func (h *HTTPClientImpl) FetchData(url string) (string, error) {
 	return string(body), nil
 }
 
-// FetchImage retrieves image data from a URL
-func (h *HTTPClientImpl) FetchImage(url string) ([]byte, error) {
+// FetchBinaryData retrieves binary data from a URL
+func (h *HTTPClientImpl) FetchBinaryData(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch image: %w", err)

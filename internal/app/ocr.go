@@ -7,7 +7,7 @@ import (
 func (app *App) RunOCR() error {
 	url := "https://assets-v2.circle.so/837mal5q2pf3xskhmfuybrh0uwnd"
 
-	data, err := app.httpClient.FetchImage(url)
+	data, err := app.httpClient.FetchBinaryData(url)
 	if err != nil {
 		return fmt.Errorf("failed to fetch data: %w", err)
 	}
