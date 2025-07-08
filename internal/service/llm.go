@@ -308,6 +308,8 @@ func (c *OpenAIClient) AnswerWithContext(systemPrompt, userPrompt string) (strin
 		return "", fmt.Errorf("failed to call OpenAI API: %w", err)
 	}
 
+	// fmt.Printf("Token usage: %d\n", chatCompletion.Usage.TotalTokens)
+
 	return chatCompletion.Choices[0].Message.Content, nil
 }
 
