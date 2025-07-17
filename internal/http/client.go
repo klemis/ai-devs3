@@ -136,7 +136,7 @@ func (c *Client) FetchBinaryData(ctx context.Context, url string) ([]byte, error
 }
 
 // PostJSON sends a JSON payload to the specified URL
-func (c *Client) PostJSON(ctx context.Context, url string, payload interface{}) (string, error) {
+func (c *Client) PostJSON(ctx context.Context, url string, payload any) (string, error) {
 	var jsonData []byte
 	var err error
 
@@ -157,13 +157,13 @@ func (c *Client) PostJSON(ctx context.Context, url string, payload interface{}) 
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 400 {
-		return "", errors.NewAPIError("HTTP", resp.StatusCode, "HTTP error", nil)
-	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return "", errors.NewAPIError("HTTP", resp.StatusCode, "HTTP error: "+string(body), nil)
 	}
 
 	return string(body), nil
@@ -210,7 +210,7 @@ func (c *Client) BuildAIDevsResponse(task string, apiKey string, answer any) map
 }
 
 // PostReport sends a report to the AI-DEVS central endpoint
-func (c *Client) PostReport(ctx context.Context, baseURL string, response map[string]interface{}) (string, error) {
+func (c *Client) PostReport(ctx context.Context, baseURL string, response map[string]any) (string, error) {
 	reportURL := fmt.Sprintf("%s/report", baseURL)
 	return c.PostJSON(ctx, reportURL, response)
 }

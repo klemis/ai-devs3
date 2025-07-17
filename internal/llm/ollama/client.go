@@ -27,10 +27,10 @@ type ChatMessage struct {
 
 // ChatRequest represents the chat request structure for Ollama API
 type ChatRequest struct {
-	Model    string                 `json:"model"`
-	Messages []ChatMessage          `json:"messages"`
-	Stream   bool                   `json:"stream"`
-	Options  map[string]interface{} `json:"options"`
+	Model    string         `json:"model"`
+	Messages []ChatMessage  `json:"messages"`
+	Stream   bool           `json:"stream"`
+	Options  map[string]any `json:"options"`
 }
 
 // ChatResponse represents the response structure from Ollama chat API
@@ -52,28 +52,36 @@ func NewClient(cfg config.OllamaConfig) *Client {
 
 // CensorText sends text to Ollama for censoring according to specific rules
 func (c *Client) CensorText(ctx context.Context, text string) (string, error) {
-	systemPrompt := `
-You are a text formatting assistant. Your task is to replace certain phrases in the provided text with the word "CENZURA" according to these strict rules:
+	systemPrompt := `You are a text replacement tool. Your ONLY task is to find and replace specific phrases with "CENZURA" while keeping ALL other text EXACTLY unchanged.
 
-RULES:
-1. Replace name and surname TOGETHER as one unit with "CENZURA" (e.g., "Jan Nowak" -> "CENZURA")
-2. Replace age numbers with "CENZURA" (e.g., "32" -> "CENZURA")
-3. Replace city names with "CENZURA" (e.g., "Katowice" or "Katowicach" -> "CENZURA")
-4. Replace the entire street name and house number TOGETHER as one unit with "CENZURA" after "ul." or "ulicy" or "przy ulicy" (e.g., "ul. Tuwima 10" or "ulicy Pięknej 5" -> "ul. CENZURA" or "ulicy CENZURA" or "przy ulicy CENZURA")
+	REPLACEMENT RULES:
+		1. Name + surname together → "CENZURA" (e.g., "Jan Nowak" → "CENZURA")
+		2. Age numbers → "CENZURA" (e.g., "32" → "CENZURA")
+		3. City names → "CENZURA" (e.g., "Katowice" → "CENZURA")
+		4. Street addresses: Keep "ul." or "ulicy" or "przy ul." but replace everything after with "CENZURA"
+		   - "ul. Różanej 12" → "ul. CENZURA"
+		   - "przy ul. Różanej 12" → "przy ul. CENZURA"
+		   - "ulicy Pięknej 5" → "ulicy CENZURA"
 
-IMPORTANT RESTRICTIONS:
-- DO NOT censor name and surname separately (never use "CENZURA CENZURA")
-- DO NOT censor street and house number separately (never use "CENZURA CENZURA")
-- Always use "CENZURA" exactly as written. Do NOT change its form, ending, or capitalization.
-- Keep ALL original formatting (dots, commas, spaces, capitalization)
-- Do NOT change any text except for the specified information to be replaced.
-- Do NOT add any explanations or comments
-- Return ONLY the modified text
+	CRITICAL REQUIREMENTS:
+		- Do NOT change, rephrase, or improve ANY other text
+		- Do NOT remove prepositions like "przy" or "ul."
+		- Keep EXACT original wording except for the specified replacements
+		- Maintain ALL punctuation, spacing, and capitalization
 
-Input: "Informacje o podejrzanym: Adam Nowak. Mieszka w Katowicach przy ulicy Tuwima 10. Wiek: 32 lata."
-Output: "Informacje o podejrzanym: CENZURA. Mieszka w CENZURA przy ulicy CENZURA. Wiek: CENZURA lata."
-`
-	userPrompt := fmt.Sprintf("Replace the specified phrases in this text according to the rules:\n\n%s", text)
+	Examples:
+		Input: "Podejrzany: Jan Kowalski. Mieszka w Warszawie przy ul. Długiej 5. Ma 25 lat."
+		Output: "Podejrzany: CENZURA. Mieszka w CENZURA przy ul. CENZURA. Ma CENZURA lat."
+
+		Input: "Adam Nowak zamieszkały w Krakowie, ulicy Królewskiej 10, wiek 45 lat."
+		Output: "CENZURA zamieszkały w CENZURA, ulicy CENZURA, wiek CENZURA lat."
+
+		Input: Dane podejrzanego: Jakub Woźniak. Adres: Rzeszów, ul. Miła 4. Wiek: 33 lata.
+		Input: Dane podejrzanego: CENZURA. Adres: Cenzura, ul. CENZURA. Wiek: CENZURA lat.
+
+		Now perform ONLY the specified replacements on the following text:`
+
+	userPrompt := fmt.Sprintf("%s", text)
 
 	request := ChatRequest{
 		Model: c.config.Model,
@@ -88,10 +96,10 @@ Output: "Informacje o podejrzanym: CENZURA. Mieszka w CENZURA przy ulicy CENZURA
 			},
 		},
 		Stream: false,
-		Options: map[string]interface{}{
-			"temperature": c.config.Temperature,
-			"top_p":       0.9,
-			"num_predict": 500,
+		Options: map[string]any{
+			"temperature": c.config.Temperature, //0.0
+			"top_p":       0.1,
+			"num_predict": 200,
 		},
 	}
 
@@ -136,7 +144,7 @@ func (c *Client) GetAnswer(ctx context.Context, question string) (string, error)
 			},
 		},
 		Stream: false,
-		Options: map[string]interface{}{
+		Options: map[string]any{
 			"temperature": c.config.Temperature,
 		},
 	}
@@ -186,7 +194,7 @@ func (c *Client) GetAnswerWithContext(ctx context.Context, systemPrompt, userPro
 			},
 		},
 		Stream: false,
-		Options: map[string]interface{}{
+		Options: map[string]any{
 			"temperature": c.config.Temperature,
 		},
 	}

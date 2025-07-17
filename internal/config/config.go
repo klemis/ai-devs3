@@ -60,8 +60,8 @@ func Load() (*Config, error) {
 		},
 		Ollama: OllamaConfig{
 			BaseURL:     getEnv("OLLAMA_BASE_URL", "http://localhost:11434"),
-			Model:       getEnv("OLLAMA_MODEL", "llama3.2"),
-			Temperature: 0.1,
+			Model:       getEnv("OLLAMA_MODEL", "llama3.2:3b"),
+			Temperature: 0.5,
 		},
 		HTTP: HTTPConfig{
 			Timeout: 30 * time.Second,
