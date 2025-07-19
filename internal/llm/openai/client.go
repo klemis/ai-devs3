@@ -388,8 +388,8 @@ func (c *Client) AnalyzeMapFragments(ctx context.Context, imagesBase64 []string)
 
 	chatCompletion, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages:    messages,
-		Model:       openai.ChatModel(c.config.Model),
-		Temperature: openai.Float(c.config.Temperature),
+		Model:       openai.ChatModel(openai.ChatModelGPT4_1),
+		Temperature: openai.Float(0.1),
 	})
 	if err != nil {
 		return nil, errors.NewAPIError("OpenAI", 0, "failed to analyze map fragments", err)
@@ -402,4 +402,33 @@ func (c *Client) AnalyzeMapFragments(ctx context.Context, imagesBase64 []string)
 	}
 
 	return &analysis, nil
+}
+
+// CreateEmbedding generates embeddings for the given text using OpenAI
+func (c *Client) CreateEmbedding(req EmbeddingRequest) (*EmbeddingResponse, error) {
+	ctx := context.Background()
+
+	embedding, err := c.client.Embeddings.New(ctx, openai.EmbeddingNewParams{
+		Input: openai.EmbeddingNewParamsInputUnion{
+			OfString: openai.String(req.Input),
+		},
+		Model: openai.EmbeddingModel(req.Model),
+	})
+	if err != nil {
+		return nil, errors.NewAPIError("OpenAI Embeddings", 0, "failed to create embedding", err)
+	}
+
+	// Convert the response to our format
+	response := &EmbeddingResponse{
+		Model: string(embedding.Model),
+		Data: make([]struct {
+			Embedding []float64 `json:"embedding"`
+		}, len(embedding.Data)),
+	}
+
+	for i, data := range embedding.Data {
+		response.Data[i].Embedding = data.Embedding
+	}
+
+	return response, nil
 }

@@ -33,3 +33,17 @@ type ImageProcessingResult struct {
 	Height     int
 	TokenCost  int
 }
+
+// EmbeddingRequest represents a request to generate embeddings
+type EmbeddingRequest struct {
+	Input string `json:"input"`
+	Model string `json:"model"`
+}
+
+// EmbeddingResponse represents the response from embedding API
+type EmbeddingResponse struct {
+	Data []struct {
+		Embedding []float64 `json:"embedding"`
+	} `json:"data"`
+	Model string `json:"model"`
+}

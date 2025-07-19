@@ -13,6 +13,7 @@ type Config struct {
 	Ollama OllamaConfig
 	HTTP   HTTPConfig
 	Cache  CacheConfig
+	Qdrant QdrantConfig
 }
 
 // AIDevsConfig holds AI-DEVS specific configuration
@@ -46,6 +47,14 @@ type CacheConfig struct {
 	BaseDir string
 }
 
+// QdrantConfig holds Qdrant vector database configuration
+type QdrantConfig struct {
+	Host   string
+	Port   int
+	APIKey string
+	UseTLS bool
+}
+
 // Load creates a new Config instance from environment variables
 func Load() (*Config, error) {
 	config := &Config{
@@ -70,6 +79,12 @@ func Load() (*Config, error) {
 		Cache: CacheConfig{
 			BaseDir: getEnv("CACHE_DIR", "data"),
 		},
+		Qdrant: QdrantConfig{
+			Host:   getEnv("QDRANT_HOST", "localhost"),
+			Port:   6334,
+			APIKey: getEnv("QDRANT_API_KEY", ""),
+			UseTLS: true,
+		},
 	}
 
 	// Validate required fields
@@ -79,6 +94,10 @@ func Load() (*Config, error) {
 
 	if config.OpenAI.APIKey == "" {
 		return nil, fmt.Errorf("OPENAI_API_KEY environment variable is required")
+	}
+
+	if config.Qdrant.APIKey == "" {
+		return nil, fmt.Errorf("QDRANT_API_KEY environment variable is required")
 	}
 
 	return config, nil
