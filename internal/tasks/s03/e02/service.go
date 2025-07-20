@@ -12,6 +12,7 @@ import (
 
 	"ai-devs3/internal/http"
 	"ai-devs3/internal/llm/openai"
+	"ai-devs3/pkg/errors"
 
 	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
@@ -35,40 +36,82 @@ func NewService(httpClient *http.Client, llmClient *openai.Client, quadrantClien
 	}, nil
 }
 
-// ProcessWeaponReportsTask processes all weapon reports and answers the query
-func (s *Service) ProcessWeaponReportsTask(apiKey string) (string, error) {
-	ctx := context.Background()
+// ExecuteTask executes the complete S03E02 task workflow
+func (s *Service) ExecuteTask(ctx context.Context, apiKey string) (*TaskResult, error) {
+	startTime := time.Now()
+
+	// Execute the weapon reports task
+	answer, stats, err := s.processWeaponReportsTask(ctx, apiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Submit response
+	response, err := s.submitWeaponReportsResponse(ctx, apiKey, answer)
+	if err != nil {
+		return nil, errors.NewTaskError("s03e02", "submit_response", err)
+	}
+
+	// Calculate final stats
+	stats.ProcessingTime = time.Since(startTime).Seconds()
+
+	return &TaskResult{
+		Response:         response,
+		Answer:           answer,
+		ProcessingStats:  stats,
+		ReportsProcessed: stats.ReportsProcessed,
+	}, nil
+}
+
+// processWeaponReportsTask processes all weapon reports and answers the query
+func (s *Service) processWeaponReportsTask(ctx context.Context, apiKey string) (string, *ProcessingStats, error) {
+	stats := &ProcessingStats{
+		VectorDimensions: 3072, // text-embedding-3-large dimensions
+	}
 
 	// Step 1: Setup Qdrant collection
 	log.Println("Setting up Qdrant collection...")
 	if err := s.setupQdrantCollection(ctx); err != nil {
-		return "", fmt.Errorf("failed to setup Qdrant collection: %w", err)
+		return "", stats, errors.NewTaskError("s03e02", "setup_collection", err)
 	}
+	stats.CollectionSetup = true
 
 	// Step 2: Process weapon reports
 	log.Println("Processing weapon reports...")
 	reports, err := s.loadWeaponReports()
 	if err != nil {
-		return "", fmt.Errorf("failed to load weapon reports: %w", err)
+		return "", stats, errors.NewTaskError("s03e02", "load_reports", err)
 	}
 
 	log.Printf("Found %d weapon reports", len(reports))
+	stats.ReportsProcessed = len(reports)
+
+	// Calculate total data size
+	var totalSize int64
+	for _, report := range reports {
+		totalSize += int64(len(report.Content))
+	}
+	stats.TotalDataSize = totalSize
 
 	// Step 3: Generate embeddings and store in Qdrant
-	if err := s.processAndStoreReports(ctx, reports); err != nil {
-		return "", fmt.Errorf("failed to process and store reports: %w", err)
+	embeddingsCount, err := s.processAndStoreReports(ctx, reports)
+	if err != nil {
+		return "", stats, errors.NewTaskError("s03e02", "process_store_reports", err)
 	}
+	stats.EmbeddingsGenerated = embeddingsCount
 
 	// Step 4: Query for theft mention
 	log.Println("Searching for theft mention...")
+	searchStart := time.Now()
 	theftQuery := "W raporcie, z którego dnia znajduje się wzmianka o kradzieży prototypu broni?"
 	date, err := s.searchForTheft(ctx, theftQuery)
 	if err != nil {
-		return "", fmt.Errorf("failed to search for theft: %w", err)
+		return "", stats, errors.NewTaskError("s03e02", "search_theft", err)
 	}
+	stats.SearchTime = time.Since(searchStart).Seconds()
 
 	log.Printf("Found theft mention in report from date: %s", date)
-	return date, nil
+	return date, stats, nil
 }
 
 // setupQdrantCollection creates or recreates the collection for weapon reports
@@ -79,12 +122,10 @@ func (s *Service) setupQdrantCollection(ctx context.Context) error {
 		return fmt.Errorf("failed to check collection existence: %w", err)
 	}
 
-	// Delete existing collection if it exists
+	// Skip collection creation if it already exists
 	if exists {
-		log.Println("Deleting existing collection...")
-		if err := s.qdrantClient.DeleteCollection(ctx, s.collectionName); err != nil {
-			return fmt.Errorf("failed to delete existing collection: %w", err)
-		}
+		log.Println("Collection already exists, skipping collection creation")
+		return nil
 	}
 
 	// Create new collection with proper vector size for text-embedding-3-large
@@ -173,8 +214,33 @@ func (s *Service) extractDateFromFilename(filename string) (time.Time, error) {
 	return date, nil
 }
 
+// submitWeaponReportsResponse submits the weapon reports results to the centrala API
+func (s *Service) submitWeaponReportsResponse(ctx context.Context, apiKey string, answer string) (string, error) {
+	response := s.httpClient.BuildAIDevsResponse("wektory", apiKey, answer)
+
+	result, err := s.httpClient.PostReport(ctx, "https://c3ntrala.ag3nts.org", response)
+	if err != nil {
+		return "", fmt.Errorf("failed to submit weapon reports response: %w", err)
+	}
+
+	return result, nil
+}
+
+// PrintProcessingStats prints detailed processing statistics
+func (s *Service) PrintProcessingStats(stats *ProcessingStats) {
+	fmt.Println("=== S03E02 Processing Statistics ===")
+	fmt.Printf("Reports processed: %d\n", stats.ReportsProcessed)
+	fmt.Printf("Embeddings generated: %d\n", stats.EmbeddingsGenerated)
+	fmt.Printf("Vector dimensions: %d\n", stats.VectorDimensions)
+	fmt.Printf("Total data size: %d bytes\n", stats.TotalDataSize)
+	fmt.Printf("Collection setup: %t\n", stats.CollectionSetup)
+	fmt.Printf("Search time: %.2f seconds\n", stats.SearchTime)
+	fmt.Printf("Total processing time: %.2f seconds\n", stats.ProcessingTime)
+	fmt.Println("=====================================")
+}
+
 // processAndStoreReports generates embeddings and stores reports in Qdrant
-func (s *Service) processAndStoreReports(ctx context.Context, reports []WeaponReport) error {
+func (s *Service) processAndStoreReports(ctx context.Context, reports []WeaponReport) (int, error) {
 	var points []*qdrant.PointStruct
 
 	for i, report := range reports {
@@ -183,7 +249,7 @@ func (s *Service) processAndStoreReports(ctx context.Context, reports []WeaponRe
 		// Generate embedding for the report content
 		embedding, err := s.generateEmbedding(report.Content)
 		if err != nil {
-			return fmt.Errorf("failed to generate embedding for %s: %w", report.Filename, err)
+			return 0, fmt.Errorf("failed to generate embedding for %s: %w", report.Filename, err)
 		}
 
 		// Create Qdrant point
@@ -206,9 +272,6 @@ func (s *Service) processAndStoreReports(ctx context.Context, reports []WeaponRe
 		}
 
 		points = append(points, point)
-
-		// Add small delay to respect API rate limits
-		time.Sleep(100 * time.Millisecond)
 	}
 
 	// Upsert all points to Qdrant
@@ -218,11 +281,11 @@ func (s *Service) processAndStoreReports(ctx context.Context, reports []WeaponRe
 		Points:         points,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to upsert points to Qdrant: %w", err)
+		return 0, fmt.Errorf("failed to upsert points to Qdrant: %w", err)
 	}
 
 	log.Printf("Successfully stored %d reports in Qdrant", len(points))
-	return nil
+	return len(points), nil
 }
 
 // generateEmbedding generates embedding for text using OpenAI

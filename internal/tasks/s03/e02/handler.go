@@ -2,12 +2,15 @@ package e02
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
 	"ai-devs3/internal/config"
 	"ai-devs3/internal/http"
 	"ai-devs3/internal/llm/openai"
+
+	pkgerrors "ai-devs3/pkg/errors"
 
 	"github.com/qdrant/go-client/qdrant"
 )
@@ -38,10 +41,6 @@ func NewHandler(cfg *config.Config) *Handler {
 
 	// Initialize service with Qdrant connection
 	service, err := NewService(httpClient, llmClient, qdrantClient)
-	if err != nil {
-		log.Printf("Warning: failed to initialize service with Qdrant: %v", err)
-		// Continue with nil service to allow graceful error handling in Execute
-	}
 
 	return &Handler{
 		config:     cfg,
@@ -66,19 +65,34 @@ func (h *Handler) Execute(ctx context.Context) error {
 		return fmt.Errorf("AI_DEVS_API_KEY is required")
 	}
 
-	// Process the weapon reports task
-	answer, err := h.service.ProcessWeaponReportsTask(apiKey)
+	// Execute the task
+	result, err := h.service.ExecuteTask(ctx, apiKey)
 	if err != nil {
-		return fmt.Errorf("failed to process weapon reports task: %w", err)
+		var taskErr pkgerrors.TaskError
+		if errors.As(err, &taskErr) {
+			log.Printf("Task failed at step %s: %v", taskErr.Step, taskErr.Err)
+			return fmt.Errorf("S03E02 task failed: %w", err)
+		}
+		return fmt.Errorf("S03E02 task failed: %w", err)
 	}
 
-	// Submit response
-	response := h.httpClient.BuildAIDevsResponse("wektory", apiKey, answer)
-	result, err := h.httpClient.PostReport(ctx, h.config.AIDevs.BaseURL, response)
-	if err != nil {
-		return fmt.Errorf("failed to submit report: %w", err)
+	// Print processing statistics if available
+	if result.ProcessingStats != nil {
+		h.service.PrintProcessingStats(result.ProcessingStats)
 	}
 
-	log.Printf("Successfully processed weapon reports, response: %s", result)
+	// Log results
+	log.Printf("Task completed successfully!")
+	log.Printf("Reports processed: %d", result.ReportsProcessed)
+	log.Printf("Answer found: %s", result.Answer)
+
+	fmt.Println("=== Vector Search Results ===")
+	fmt.Printf("Reports processed: %d\n", result.ReportsProcessed)
+	fmt.Printf("Answer: %s\n", result.Answer)
+	fmt.Println("=============================")
+
+	fmt.Println("Weapon reports processing successful!")
+	fmt.Printf("Response: %s\n", result.Response)
+
 	return nil
 }

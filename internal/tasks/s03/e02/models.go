@@ -37,6 +37,25 @@ type SearchResult struct {
 // VektorAnswer represents the answer structure for the wektory task
 type VektorAnswer string
 
+// TaskResult represents the final result of the S03E02 task
+type TaskResult struct {
+	Response         string
+	Answer           string
+	ProcessingStats  *ProcessingStats
+	ReportsProcessed int
+}
+
+// ProcessingStats represents statistics about the vector processing
+type ProcessingStats struct {
+	ReportsProcessed    int
+	EmbeddingsGenerated int
+	ProcessingTime      float64
+	CollectionSetup     bool
+	SearchTime          float64
+	VectorDimensions    int
+	TotalDataSize       int64
+}
+
 // EmbeddingResponse represents OpenAI embedding API response
 type EmbeddingResponse struct {
 	Data []struct {

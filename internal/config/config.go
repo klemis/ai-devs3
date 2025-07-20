@@ -81,7 +81,7 @@ func Load() (*Config, error) {
 		},
 		Qdrant: QdrantConfig{
 			Host:   getEnv("QDRANT_HOST", "localhost"),
-			Port:   6334,
+			Port:   6334, // grpc port
 			APIKey: getEnv("QDRANT_API_KEY", ""),
 			UseTLS: true,
 		},

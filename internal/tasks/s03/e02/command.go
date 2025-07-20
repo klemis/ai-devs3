@@ -28,7 +28,7 @@ func NewCommand(cfg *config.Config) *cobra.Command {
 		The task requires:
 			1. AI_DEVS_API_KEY environment variable to be set
 			2. OPENAI_API_KEY environment variable to be set
-			3. Qdrant vector database running on localhost:6333
+			3. Qdrant vector database cluster running
 			4. Files directory at ../lessons-md/pliki_z_fabryki/do-not-share with report files
 			5. Sufficient memory and processing power for embedding generation
 
