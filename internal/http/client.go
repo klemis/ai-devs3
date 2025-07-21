@@ -56,7 +56,7 @@ func (c *Client) FetchPage(ctx context.Context, url string) (string, error) {
 }
 
 // FetchJSONData downloads and unmarshals JSON from the given URL
-func (c *Client) FetchJSONData(ctx context.Context, url string) (map[string]interface{}, error) {
+func (c *Client) FetchJSONData(ctx context.Context, url string) (map[string]any, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -77,7 +77,7 @@ func (c *Client) FetchJSONData(ctx context.Context, url string) (map[string]inte
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := json.Unmarshal(body, &data); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}

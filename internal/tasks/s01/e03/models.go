@@ -2,10 +2,10 @@ package e03
 
 // TestQuestion represents a question in the test data
 type TestQuestion struct {
-	Question string                 `json:"question,omitempty"`
-	Answer   interface{}            `json:"answer,omitempty"`
-	Test     *TestSubQuestion       `json:"test,omitempty"`
-	Extra    map[string]interface{} `json:"-"` // For any additional fields
+	Question string           `json:"question,omitempty"`
+	Answer   any              `json:"answer,omitempty"`
+	Test     *TestSubQuestion `json:"test,omitempty"`
+	Extra    map[string]any   `json:"-"` // For any additional fields
 }
 
 // TestSubQuestion represents a nested test question

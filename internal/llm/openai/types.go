@@ -19,7 +19,7 @@ type RoboISOAnswer struct {
 }
 
 // parseJSONResponse parses a JSON response from OpenAI into the target structure
-func parseJSONResponse(content string, target interface{}) error {
+func parseJSONResponse(content string, target any) error {
 	if err := json.Unmarshal([]byte(content), target); err != nil {
 		return fmt.Errorf("failed to unmarshal JSON response: %w, content: %s", err, content)
 	}

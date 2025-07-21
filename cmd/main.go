@@ -16,6 +16,7 @@ import (
 	s02e05 "ai-devs3/internal/tasks/s02/e05"
 	s03e01 "ai-devs3/internal/tasks/s03/e01"
 	s03e02 "ai-devs3/internal/tasks/s03/e02"
+	s03e03 "ai-devs3/internal/tasks/s03/e03"
 	"ai-devs3/internal/tasks/utils/centrala"
 	"ai-devs3/internal/tasks/utils/ocr"
 
@@ -92,6 +93,7 @@ func init() {
 	// Add Season 3 tasks
 	rootCmd.AddCommand(s03e01.NewCommand(cfg))
 	rootCmd.AddCommand(s03e02.NewCommand(cfg))
+	rootCmd.AddCommand(s03e03.NewCommand(cfg))
 
 	// Add utility commands
 	rootCmd.AddCommand(centrala.NewCommand(cfg))
@@ -129,6 +131,7 @@ func init() {
 			fmt.Println("Season 3:")
 			fmt.Println("  s03e01  - Security Reports Processing")
 			fmt.Println("  s03e02  - Weapon Reports Vector Search")
+			fmt.Println("  s03e03  - Database Query Task")
 			fmt.Println()
 			fmt.Println("Utilities:")
 			fmt.Println("  centrala - Centrala Page Analysis")
