@@ -108,6 +108,25 @@ func (s *Service) discoverDatabaseStructure(ctx context.Context, apiKey string) 
 			continue
 		}
 
+		// Find and print side flag in correct_order table
+		if tableName == "correct_order" {
+			log.Printf("Getting content for table: %s", tableName)
+
+			contentQuery := fmt.Sprintf("SELECT * FROM %s order by weight", tableName)
+			contentResult, err := s.executeQuery(ctx, apiKey, contentQuery)
+			if err != nil {
+				log.Printf("Warning: Failed to get content for table %s: %v", tableName, err)
+				continue
+			}
+
+			var sideFlag string
+			for _, row := range contentResult.Reply {
+				sideFlag += fmt.Sprintf("%v", row["letter"])
+			}
+
+			log.Printf("Found side flag: %s", sideFlag)
+		}
+
 		schema := &TableSchema{
 			Name:    tableName,
 			Columns: make([]string, 0),
@@ -119,7 +138,7 @@ func (s *Service) discoverDatabaseStructure(ctx context.Context, apiKey string) 
 				if strings.Contains(strings.ToLower(key), "create") {
 					if createSQL, ok := value.(string); ok {
 						schema.CreateSQL = createSQL
-						log.Printf("Schema for %s: %s", tableName, createSQL)
+						// log.Printf("Schema for %s: %s", tableName, createSQL)
 					}
 				}
 			}
