@@ -209,8 +209,27 @@ func (c *Client) BuildAIDevsResponse(task string, apiKey string, answer any) map
 	}
 }
 
+// AIDevsAPIResponse represents the standard AI-DEVS API response format
+type AIDevsAPIResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 // PostReport sends a report to the AI-DEVS central endpoint
 func (c *Client) PostReport(ctx context.Context, baseURL string, response map[string]any) (string, error) {
 	reportURL := fmt.Sprintf("%s/report", baseURL)
-	return c.PostJSON(ctx, reportURL, response)
+
+	res, err := c.PostJSON(ctx, reportURL, response)
+	if err != nil {
+		return "", err
+	}
+
+	// Parse the JSON response to extract the message
+	var apiResponse AIDevsAPIResponse
+	message := res // Default to raw response if parsing fails
+	if err := json.Unmarshal([]byte(res), &apiResponse); err == nil {
+		message = apiResponse.Message
+	}
+
+	return message, nil
 }

@@ -61,7 +61,6 @@ func (s *Service) ExecuteTask(ctx context.Context, apiKey string) (*TaskResult, 
 	if err != nil {
 		return nil, errors.NewTaskError("s03e03", "submit_response", err)
 	}
-
 	processingTime := time.Since(startTime).Seconds()
 
 	return &TaskResult{

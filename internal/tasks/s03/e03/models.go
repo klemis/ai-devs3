@@ -30,9 +30,16 @@ type DatabaseInfo struct {
 // TaskResult represents the final result of the S03E03 task
 type TaskResult struct {
 	Response       string
+	Message        string // Extracted message from AI-DEVS API response
 	DatacenterIDs  []int
 	GeneratedQuery string
 	ProcessingTime float64
+}
+
+// AIDevsAPIResponse represents the standard AI-DEVS API response format
+type AIDevsAPIResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
 // ProcessingStats represents statistics about the database processing
