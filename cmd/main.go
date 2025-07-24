@@ -17,7 +17,6 @@ import (
 	s03e01 "ai-devs3/internal/tasks/s03/e01"
 	s03e02 "ai-devs3/internal/tasks/s03/e02"
 	s03e03 "ai-devs3/internal/tasks/s03/e03"
-	"ai-devs3/internal/tasks/utils/centrala"
 	"ai-devs3/internal/tasks/utils/ocr"
 
 	"github.com/spf13/cobra"
@@ -50,7 +49,6 @@ Each task is organized by season and episode (e.g., s01e01, s01e02, etc.)`,
   ai-devs3 s03e01  # Security reports processing
 
   # Utility commands
-  ai-devs3 centrala                              # Centrala page analysis
   ai-devs3 ocr [image_url]                      # OCR text extraction
 
   # Get help for a specific task
@@ -96,7 +94,6 @@ func init() {
 	rootCmd.AddCommand(s03e03.NewCommand(cfg))
 
 	// Add utility commands
-	rootCmd.AddCommand(centrala.NewCommand(cfg))
 	rootCmd.AddCommand(ocr.NewCommand(cfg))
 
 	// Add version command
@@ -134,7 +131,6 @@ func init() {
 			fmt.Println("  s03e03  - Database Query Task")
 			fmt.Println()
 			fmt.Println("Utilities:")
-			fmt.Println("  centrala - Centrala Page Analysis")
 			fmt.Println("  ocr      - OCR Text Extraction")
 			fmt.Println()
 			fmt.Println("Use 'ai-devs3 <task> --help' for more information about a specific task.")

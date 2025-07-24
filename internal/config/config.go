@@ -1,9 +1,10 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"time"
+
+	pkgerrors "ai-devs3/pkg/errors"
 )
 
 // Config holds all configuration for the application
@@ -89,15 +90,15 @@ func Load() (*Config, error) {
 
 	// Validate required fields
 	if config.AIDevs.APIKey == "" {
-		return nil, fmt.Errorf("AI_DEVS_API_KEY environment variable is required")
+		return nil, pkgerrors.NewConfigError("AI_DEVS_API_KEY", "environment variable is required", nil)
 	}
 
 	if config.OpenAI.APIKey == "" {
-		return nil, fmt.Errorf("OPENAI_API_KEY environment variable is required")
+		return nil, pkgerrors.NewConfigError("OPENAI_API_KEY", "environment variable is required", nil)
 	}
 
 	if config.Qdrant.APIKey == "" {
-		return nil, fmt.Errorf("QDRANT_API_KEY environment variable is required")
+		return nil, pkgerrors.NewConfigError("QDRANT_API_KEY", "environment variable is required", nil)
 	}
 
 	return config, nil

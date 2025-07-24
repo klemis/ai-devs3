@@ -210,28 +210,6 @@ func (s *Service) ExecuteTask(ctx context.Context, fragmentsDir string, numFragm
 	}, nil
 }
 
-// GetProcessingStats returns statistics about the image processing
-func (s *Service) GetProcessingStats(fragments []MapFragment) *ImageProcessingStats {
-	stats := &ImageProcessingStats{
-		TotalFragments:  len(fragments),
-		ProcessedImages: 0,
-		TotalTokenCost:  0,
-	}
-
-	for _, fragment := range fragments {
-		if fragment.Base64Data != "" {
-			stats.ProcessedImages++
-			stats.TotalTokenCost += fragment.TokenCost
-		}
-	}
-
-	if stats.ProcessedImages > 0 {
-		stats.AverageTokenCost = stats.TotalTokenCost / stats.ProcessedImages
-	}
-
-	return stats
-}
-
 // ValidateFragmentsDirectory validates that the fragments directory exists and contains the expected files
 func (s *Service) ValidateFragmentsDirectory(fragmentsDir string, numFragments int) error {
 	// Check if directory exists

@@ -74,20 +74,3 @@ Example Output: "A sleek metallic robot with bright red sensor lights, sturdy tr
 
 	return chatCompletion.Choices[0].Message.Content, nil
 }
-
-// GenerateImageFromDescription combines keyword extraction and image generation
-func (c *Client) GenerateImageFromDescription(ctx context.Context, description string) (string, error) {
-	// First, extract optimized keywords from the description
-	prompt, err := c.ExtractKeywordsForDALLE(ctx, description)
-	if err != nil {
-		return "", fmt.Errorf("failed to extract keywords: %w", err)
-	}
-
-	// Then generate the image using the optimized prompt
-	imageURL, err := c.GenerateImage(ctx, prompt)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate image: %w", err)
-	}
-
-	return imageURL, nil
-}
