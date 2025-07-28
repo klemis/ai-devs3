@@ -48,6 +48,12 @@ ai-devs3 s01e05    # Text Censoring
 ./bin/ai-devs3 s02e02    # Map Analysis
 ./bin/ai-devs3 s02e03    # Robot Image Generation
 ./bin/ai-devs3 s02e04    # File Categorization
+
+# Season 3 tasks
+./bin/ai-devs3 s03e01    # Security Reports Processing
+./bin/ai-devs3 s03e02    # Weapon Reports Vector Search
+./bin/ai-devs3 s03e03    # Database Query Task
+./bin/ai-devs3 s03e04    # Barbara Search Task
 ```
 
 ## Configuration
@@ -87,6 +93,12 @@ export OLLAMA_MODEL="llama3.2"
 - **s02e02**: Map Analysis - Analyze map fragments to identify Polish cities
 - **s02e03**: Robot Image Generation - Generate robot images using DALL-E
 - **s02e04**: File Categorization - Process and categorize files into people/hardware
+
+### Season 3 (Complex Operations)
+- **s03e01**: Security Reports Processing - Process and analyze security reports
+- **s03e02**: Weapon Reports Vector Search - Vector search for weapon-related reports
+- **s03e03**: Database Query Task - Query database API to find datacenter information
+- **s03e04**: Barbara Search Task - BFS search to find Barbara's current location
 
 ## Architecture
 

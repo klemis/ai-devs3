@@ -161,6 +161,7 @@ func (c *Client) PostJSON(ctx context.Context, url string, payload any) (string,
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
+	fmt.Printf("Raw response: %s", body)
 
 	if resp.StatusCode >= 400 {
 		return "", errors.NewAPIError("HTTP", resp.StatusCode, "HTTP error: "+string(body), nil)

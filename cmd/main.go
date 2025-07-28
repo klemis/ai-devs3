@@ -17,6 +17,7 @@ import (
 	s03e01 "ai-devs3/internal/tasks/s03/e01"
 	s03e02 "ai-devs3/internal/tasks/s03/e02"
 	s03e03 "ai-devs3/internal/tasks/s03/e03"
+	s03e04 "ai-devs3/internal/tasks/s03/e04"
 	"ai-devs3/internal/tasks/utils/ocr"
 
 	"github.com/spf13/cobra"
@@ -47,6 +48,7 @@ Each task is organized by season and episode (e.g., s01e01, s01e02, etc.)`,
   ai-devs3 s02e04  # File categorization
   ai-devs3 s02e05  # Arxiv document analysis
   ai-devs3 s03e01  # Security reports processing
+  ai-devs3 s03e04  # Barbara search task
 
   # Utility commands
   ai-devs3 ocr [image_url]                      # OCR text extraction
@@ -92,6 +94,7 @@ func init() {
 	rootCmd.AddCommand(s03e01.NewCommand(cfg))
 	rootCmd.AddCommand(s03e02.NewCommand(cfg))
 	rootCmd.AddCommand(s03e03.NewCommand(cfg))
+	rootCmd.AddCommand(s03e04.NewCommand(cfg))
 
 	// Add utility commands
 	rootCmd.AddCommand(ocr.NewCommand(cfg))
@@ -129,6 +132,7 @@ func init() {
 			fmt.Println("  s03e01  - Security Reports Processing")
 			fmt.Println("  s03e02  - Weapon Reports Vector Search")
 			fmt.Println("  s03e03  - Database Query Task")
+			fmt.Println("  s03e04  - Barbara Search Task (loop)")
 			fmt.Println()
 			fmt.Println("Utilities:")
 			fmt.Println("  ocr      - OCR Text Extraction")

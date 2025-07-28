@@ -48,7 +48,6 @@ AI-DEVS3 is a comprehensive solution suite for processing various AI-related tas
 
 ### Special Tasks
 
-- **Centrala**: Flag extraction from web content
 - **OCR**: Image text extraction
 
 ## Installation
