@@ -162,6 +162,12 @@ func (s *Service) performBFSSearch(ctx context.Context, apiKey string, parsedDat
 	defer rateLimiter.Stop()
 
 	for len(state.QueueNames) > 0 || len(state.QueueCities) > 0 {
+		// Log progress every 10 requests
+		if state.RequestCount%10 == 0 && state.RequestCount > 0 {
+			log.Printf("=== PROGRESS: %d requests, %d names queued, %d cities queued ===",
+				state.RequestCount, len(state.QueueNames), len(state.QueueCities))
+		}
+
 		// Process names - search for people using /people endpoint
 		if len(state.QueueNames) > 0 {
 			name := state.QueueNames[0]
@@ -196,7 +202,7 @@ func (s *Service) performBFSSearch(ctx context.Context, apiKey string, parsedDat
 				if found {
 					log.Printf("Found Barbara in city: %s", city)
 					state.BarbaraLocation = city
-					return state, nil
+					log.Printf("*** BARBARA FOUND but continuing search to collect all data ***")
 				}
 			}
 		}
@@ -207,10 +213,19 @@ func (s *Service) performBFSSearch(ctx context.Context, apiKey string, parsedDat
 		}
 	}
 
+	log.Printf("*** COMPLETED EXHAUSTIVE SEARCH ***")
+	log.Printf("*** Total requests made: %d ***", state.RequestCount)
+	log.Printf("*** Total names visited: %d ***", len(state.VisitedNames))
+	log.Printf("*** Total cities visited: %d ***", len(state.VisitedCities))
+
+	// Print comprehensive summary of all discovered data
+	s.printDataSummary(state)
+
 	if state.BarbaraLocation == "" {
-		return nil, fmt.Errorf("Barbara's location not found")
+		return nil, fmt.Errorf("Barbara's location not found after exhaustive search")
 	}
 
+	log.Printf("*** Barbara found in: %s ***", state.BarbaraLocation)
 	return state, nil
 }
 
@@ -356,6 +371,42 @@ func (s *Service) getDiscoveredCities(state *SearchState) []string {
 		}
 	}
 	return discovered
+}
+
+// printDataSummary prints a comprehensive summary of all discovered data
+func (s *Service) printDataSummary(state *SearchState) {
+	log.Printf("=== COMPREHENSIVE DATA SUMMARY ===")
+
+	log.Printf("--- ALL DISCOVERED NAMES ---")
+	namesList := make([]string, 0, len(state.VisitedNames))
+	for name := range state.VisitedNames {
+		namesList = append(namesList, name)
+	}
+	log.Printf("Names (%d total): %v", len(namesList), namesList)
+
+	log.Printf("--- ALL DISCOVERED CITIES ---")
+	citiesList := make([]string, 0, len(state.VisitedCities))
+	for city := range state.VisitedCities {
+		citiesList = append(citiesList, city)
+	}
+	log.Printf("Cities (%d total): %v", len(citiesList), citiesList)
+
+	log.Printf("--- ORIGINAL vs DISCOVERED CITIES ---")
+	originalList := make([]string, 0, len(state.OriginalCities))
+	for city := range state.OriginalCities {
+		originalList = append(originalList, city)
+	}
+	log.Printf("Original cities: %v", originalList)
+
+	discoveredList := make([]string, 0)
+	for city := range state.VisitedCities {
+		if _, wasOriginal := state.OriginalCities[city]; !wasOriginal {
+			discoveredList = append(discoveredList, city)
+		}
+	}
+	log.Printf("Newly discovered cities: %v", discoveredList)
+
+	log.Printf("=== END DATA SUMMARY ===")
 }
 
 // submitBarbaraLocation submits Barbara's location to the centrala API
