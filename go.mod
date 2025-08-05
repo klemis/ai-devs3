@@ -4,6 +4,7 @@ go 1.24.3
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
 	github.com/openai/openai-go v1.3.0
 	github.com/qdrant/go-client v1.15.0
 	github.com/spf13/cobra v1.9.1

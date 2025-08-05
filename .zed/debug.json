@@ -9,7 +9,7 @@
     "request": "launch",
     "mode": "debug",
     "program": "./cmd/main.go",
-    "args": ["s03e04"]
+    "args": ["s03e05"]
     // "cwd": "$ZED_WORKTREE_ROOT/aidevs3"
     // "subProcess": true,
     // "redirectOutput": true,

@@ -18,6 +18,7 @@ import (
 	s03e02 "ai-devs3/internal/tasks/s03/e02"
 	s03e03 "ai-devs3/internal/tasks/s03/e03"
 	s03e04 "ai-devs3/internal/tasks/s03/e04"
+	s03e05 "ai-devs3/internal/tasks/s03/e05"
 	"ai-devs3/internal/tasks/utils/ocr"
 
 	"github.com/spf13/cobra"
@@ -95,6 +96,7 @@ func init() {
 	rootCmd.AddCommand(s03e02.NewCommand(cfg))
 	rootCmd.AddCommand(s03e03.NewCommand(cfg))
 	rootCmd.AddCommand(s03e04.NewCommand(cfg))
+	rootCmd.AddCommand(s03e05.NewCommand(cfg))
 
 	// Add utility commands
 	rootCmd.AddCommand(ocr.NewCommand(cfg))
@@ -133,6 +135,7 @@ func init() {
 			fmt.Println("  s03e02  - Weapon Reports Vector Search")
 			fmt.Println("  s03e03  - Database Query Task")
 			fmt.Println("  s03e04  - Barbara Search Task (loop)")
+			fmt.Println("  s03e05  - Connections Task (Neo4j Graph)")
 			fmt.Println()
 			fmt.Println("Utilities:")
 			fmt.Println("  ocr      - OCR Text Extraction")

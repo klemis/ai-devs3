@@ -15,6 +15,7 @@ type Config struct {
 	HTTP   HTTPConfig
 	Cache  CacheConfig
 	Qdrant QdrantConfig
+	Neo4j  Neo4jConfig
 }
 
 // AIDevsConfig holds AI-DEVS specific configuration
@@ -56,6 +57,13 @@ type QdrantConfig struct {
 	UseTLS bool
 }
 
+// Neo4jConfig holds Neo4j graph database configuration
+type Neo4jConfig struct {
+	URI      string
+	Username string
+	Password string
+}
+
 // Load creates a new Config instance from environment variables
 func Load() (*Config, error) {
 	config := &Config{
@@ -86,6 +94,11 @@ func Load() (*Config, error) {
 			APIKey: getEnv("QDRANT_API_KEY", ""),
 			UseTLS: true,
 		},
+		Neo4j: Neo4jConfig{
+			URI:      getEnv("NEO4J_URI", "bolt://localhost:7687"),
+			Username: getEnv("NEO4J_USER", "neo4j"),
+			Password: getEnv("NEO4J_PASSWORD", ""),
+		},
 	}
 
 	// Validate required fields
@@ -100,6 +113,9 @@ func Load() (*Config, error) {
 	if config.Qdrant.APIKey == "" {
 		return nil, pkgerrors.NewConfigError("QDRANT_API_KEY", "environment variable is required", nil)
 	}
+
+	// Note: Neo4j password is validated when creating the Neo4j client, not here
+	// This allows for optional Neo4j usage depending on the task
 
 	return config, nil
 }
