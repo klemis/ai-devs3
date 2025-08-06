@@ -20,6 +20,7 @@ import (
 	s03e04 "ai-devs3/internal/tasks/s03/e04"
 	s03e05 "ai-devs3/internal/tasks/s03/e05"
 	"ai-devs3/internal/tasks/utils/ocr"
+	"ai-devs3/internal/tasks/utils/video"
 
 	"github.com/spf13/cobra"
 )
@@ -100,6 +101,7 @@ func init() {
 
 	// Add utility commands
 	rootCmd.AddCommand(ocr.NewCommand(cfg))
+	rootCmd.AddCommand(video.NewCommand(cfg))
 
 	// Add version command
 	rootCmd.AddCommand(&cobra.Command{

@@ -1,0 +1,4 @@
+Video URL: https://player.vimeo.com/video/1031968103
+Transcription Date: 2025-08-05 23:50:17
+
+Numerze piąty. Musimy wrócić do bazy danych, którą wcześniej przeglądałeś. Jest tam tablica z powiązaniami między ludźmi, którą przygotowały roboty. Możemy ją wykorzystać. Musimy dowiedzieć się, którzy ludzie mogli pośredniczyć w wymianie dokumentów pomiędzy Rafałem a Barbarą. Istnieje szansa, że dokumenty profesora Maja nie zostały przekazane bezpośrednio, ale właśnie przez pośredników. Pytanie tylko, których? Zakładam, że tych pośredników nie mogło być wielu. Tylko jak znaleźć najkrótszą drogę od Rafała do Barbary? Z tego co wiem w 2024 roku może Ci w tym pomóc wynalazek zwany bazą grafową. Zapisz lokalnie dane z bazy MySQL, z którą wcześniej pracowałeś, a potem nakarm nimi bazę grafową i użyj jej do znalezienia najkrótszej drogi między wspomnianymi osobami. Na koniec wyślij proszę do centrali listę osób, którymi powinniśmy się zainteresować.
