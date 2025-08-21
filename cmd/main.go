@@ -19,6 +19,7 @@ import (
 	s03e03 "ai-devs3/internal/tasks/s03/e03"
 	s03e04 "ai-devs3/internal/tasks/s03/e04"
 	s03e05 "ai-devs3/internal/tasks/s03/e05"
+	s04e01 "ai-devs3/internal/tasks/s04/e01"
 	"ai-devs3/internal/tasks/utils/ocr"
 	"ai-devs3/internal/tasks/utils/video"
 
@@ -51,6 +52,7 @@ Each task is organized by season and episode (e.g., s01e01, s01e02, etc.)`,
   ai-devs3 s02e05  # Arxiv document analysis
   ai-devs3 s03e01  # Security reports processing
   ai-devs3 s03e04  # Barbara search task
+  ai-devs3 s04e01  # Image restoration and description
 
   # Utility commands
   ai-devs3 ocr [image_url]                      # OCR text extraction
@@ -99,6 +101,9 @@ func init() {
 	rootCmd.AddCommand(s03e04.NewCommand(cfg))
 	rootCmd.AddCommand(s03e05.NewCommand(cfg))
 
+	// Add Season 4 tasks
+	rootCmd.AddCommand(s04e01.NewCommand(cfg))
+
 	// Add utility commands
 	rootCmd.AddCommand(ocr.NewCommand(cfg))
 	rootCmd.AddCommand(video.NewCommand(cfg))
@@ -138,6 +143,9 @@ func init() {
 			fmt.Println("  s03e03  - Database Query Task")
 			fmt.Println("  s03e04  - Barbara Search Task (loop)")
 			fmt.Println("  s03e05  - Connections Task (Neo4j Graph)")
+			fmt.Println()
+			fmt.Println("Season 4:")
+			fmt.Println("  s04e01  - Image Restoration and Description")
 			fmt.Println()
 			fmt.Println("Utilities:")
 			fmt.Println("  ocr      - OCR Text Extraction")

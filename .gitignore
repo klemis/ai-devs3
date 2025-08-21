@@ -2,5 +2,5 @@
 .vscode
 .env
 .env.local
-.zed/
+.zed
 .DS_Store

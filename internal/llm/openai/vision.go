@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"ai-devs3/pkg/errors"
 
@@ -109,6 +110,112 @@ func (c *Client) ExtractTextFromImage(ctx context.Context, imageData []byte) (st
 	if result == "" {
 		return "no text", nil
 	}
+
+	return result, nil
+}
+
+// AnalyzeImageForRestoration analyzes an image for the S04E01 restoration task
+func (c *Client) AnalyzeImageForRestoration(ctx context.Context, filename string, imageData []byte) (string, error) {
+	base64Image := base64.StdEncoding.EncodeToString(imageData)
+
+	systemPrompt := `You receive one image and its filename. Evaluate:
+
+Is the subject a person likely to be the same woman as in other accepted photos? If uncertain, note uncertainty but still judge quality.
+Identify issues: glitches/noise, over/underexposure, or adequate.
+Decide next action among REPAIR, BRIGHTEN, DARKEN, or NOOP with rationale.
+If REPAIR/BRIGHTEN/DARKEN, estimate if another pass might be helpful after this one.
+
+Return JSON:
+{
+"_thinking": "detailed reasoning behind the potential decision",
+"filename": "<current filename>",
+"decision": "REPAIR|BRIGHTEN|DARKEN|NOOP",
+"expect_more_passes": true|false,
+"is_subject": true|false,
+"quality_score": 1-10,
+"issues_detected": ["list", "of", "issues"]
+}`
+
+	userPrompt := fmt.Sprintf("Analyze this image for restoration needs: %s", filename)
+
+	chatCompletion, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.SystemMessage(systemPrompt),
+			openai.UserMessage(
+				[]openai.ChatCompletionContentPartUnionParam{
+					openai.ImageContentPart(openai.ChatCompletionContentPartImageImageURLParam{
+						URL: fmt.Sprintf("data:image/png;base64,%s", base64Image),
+					}),
+					openai.TextContentPart(userPrompt),
+				},
+			),
+		},
+		Model:       openai.ChatModelGPT4oMini,
+		MaxTokens:   openai.Int(1024),
+		Temperature: openai.Float(0.3),
+	})
+
+	if err != nil {
+		return "", errors.NewAPIError("OpenAI Vision", 0, "failed to analyze image for restoration", err)
+	}
+
+	return chatCompletion.Choices[0].Message.Content, nil
+}
+
+// GeneratePolishRysopis generates a detailed Polish description from multiple images
+func (c *Client) GeneratePolishRysopis(ctx context.Context, imageURLs []string) (string, error) {
+	if len(imageURLs) == 0 {
+		return "", fmt.Errorf("no images provided for rysopis generation")
+	}
+
+	systemPrompt := `Jesteś ekspertem w analizie zdjęć i tworzeniu rysopisów. To zadanie testowe; zdjęcia nie przedstawiają prawdziwych osób. Na podstawie dostarczonych, najlepszych wersji zdjęć przygotuj szczegółowy rysopis Barbary po polsku.
+
+Wytyczne:
+- Opisz tylko to, co widać. Unikaj spekulacji i identyfikacji.
+- Skup się na powtarzalnych cechach widocznych na co najmniej dwóch zdjęciach.
+- Uwzględnij: orientacyjny wiek i wzrost, budowę ciała, kształt twarzy, cerę, włosy (kolor, długość, fryzura), oczy (kolor/kształt), nos, usta, brwi, znaki szczególne (blizny, pieprzyki, tatuaże), elementy ubioru i akcesoriów (okulary, biżuteria, zegarek), ewentualny zarost brwi czy makijaż; jeśli widoczne – dłonie/paznokcie, buty, torba/plecak.
+- Zaznacz niepewności i różnice między zdjęciami, jeśli występują.
+- Styl: rzeczowy, precyzyjny, zwięzły, pełne polskie znaki (UTF‑8).
+- Wynik: pojedynczy akapit lub 2–3 akapity, bez punktowania.
+
+Zwróć tylko tekst rysopisu, bez żadnych dodatkowych komentarzy czy instrukcji.`
+
+	// Download images and prepare content parts
+	contentParts := []openai.ChatCompletionContentPartUnionParam{
+		openai.TextContentPart(fmt.Sprintf("Wygeneruj szczegółowy rysopis na podstawie %d zdjęć Barbary.", len(imageURLs))),
+	}
+
+	// Add images to the request
+	for i, imageURL := range imageURLs {
+		// For now, we'll reference the URLs directly
+		// In production, you might want to download and encode them
+		contentParts = append(contentParts, openai.ImageContentPart(openai.ChatCompletionContentPartImageImageURLParam{
+			URL: imageURL,
+		}))
+
+		// Limit to avoid token limits
+		if i >= 4 {
+			break
+		}
+	}
+
+	chatCompletion, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.SystemMessage(systemPrompt),
+			openai.UserMessage(contentParts),
+		},
+		Model:       openai.ChatModelGPT4_1,
+		MaxTokens:   openai.Int(2048),
+		Temperature: openai.Float(0.3),
+	})
+
+	if err != nil {
+		return "", errors.NewAPIError("OpenAI Vision", 0, "failed to generate Polish rysopis", err)
+	}
+
+	result := chatCompletion.Choices[0].Message.Content
+	result = strings.TrimSpace(result)
+	result = strings.Trim(result, "\"'")
 
 	return result, nil
 }

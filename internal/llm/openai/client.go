@@ -388,7 +388,7 @@ func (c *Client) AnalyzeMapFragments(ctx context.Context, imagesBase64 []string)
 
 	chatCompletion, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages:    messages,
-		Model:       openai.ChatModel(openai.ChatModelGPT4_1),
+		Model:       openai.ChatModelGPT4_1,
 		Temperature: openai.Float(0.1),
 	})
 	if err != nil {
