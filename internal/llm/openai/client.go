@@ -432,3 +432,20 @@ func (c *Client) CreateEmbedding(req EmbeddingRequest) (*EmbeddingResponse, erro
 
 	return response, nil
 }
+
+// ClassifyWithFineTunedModel classifies text using a fine-tuned model
+func (c *Client) ClassifyWithFineTunedModel(ctx context.Context, systemPrompt, userPrompt, model string) (string, error) {
+	chatCompletion, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.SystemMessage(systemPrompt),
+			openai.UserMessage(userPrompt),
+		},
+		Model:       openai.ChatModel(model),
+		Temperature: openai.Float(0.1), // Low temperature for consistent classification
+	})
+	if err != nil {
+		return "", errors.NewAPIError("OpenAI", 0, "failed to classify with fine-tuned model", err)
+	}
+
+	return chatCompletion.Choices[0].Message.Content, nil
+}
